@@ -102,6 +102,7 @@ def run(pop,
 
     # loop over the surveys we want to run on the pop file
     surveyPops = []
+    discovered_psrs=[]
     for surv in surveyList:
         s = Survey(surv)
         s.discoveries = 0
@@ -144,6 +145,10 @@ def run(pop,
                     # number of discoveries by the survey
                     psr.detected = True
                     s.discoveries += 1
+                    
+                    # If its the final survey file also write out a summary of discovery parameters
+                    if surv == surveyList[-1]:
+                        discovered_psrs.append(str(psr.period)+' '+str(psr.dm)+' '+str(psr.gl)+' '+str(psr.gb))     
 
             elif snr == -1.0:
                 nsmear += 1
@@ -168,6 +173,13 @@ def run(pop,
                        nout=nout,
                        ndisc=s.discoveries)
         surveyPops.append([surv, survpop, d])
+
+        
+    if discovered_psrs:
+        with open('soi.disc','a') as textfile:
+            for element in discovered_psrs:
+                textfile.write(element + "\n")
+            textfile.close()
 
     if allsurveyfile:
         allsurvpop = Population()
