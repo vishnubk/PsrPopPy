@@ -4,7 +4,7 @@ import sys
 import argparse
 import math
 import random
-
+import numpy as np
 import inspect
 import cPickle
 
@@ -86,7 +86,7 @@ def generate(ngen,
     if lumDistType not in ['lnorm', 'pow']:
         print "Unsupported luminosity distribution: {0}".format(lumDistType)
 
-    if pDistType not in ['lnorm', 'norm', 'cc97', 'lorimer12']:
+    if pDistType not in ['lnorm', 'norm', 'cc97', 'lorimer12','lorimer15']:
         print "Unsupported period distribution: {0}".format(pDistType)
 
     if radialDistType not in ['lfl06', 'yk04', 'isotropic',
@@ -187,6 +187,8 @@ def generate(ngen,
         elif pop.pDistType == 'lorimer12':
             p.period = _lorimer2012_msp_periods()
 
+        elif pop.pDistType == 'lorimer15':
+            p.period = _lorimer2015_msp_periods()  
         if duty_percent > 0.:
             # use a simple duty cycle for each pulsar
             # with a log-normal scatter
@@ -385,6 +387,20 @@ def _lorimer2012_msp_periods():
     return 10.**logp
 
 
+def _lorimer2015_msp_periods():
+    """
+    Draw a random MSP spin period based on Lorimer et al. 2015
+    This is very shabby. Surely there is a better way!
+    """
+    samples=1000
+    chosen_periods=[]
+    probs=[]
+    for i in range(samples):
+        u = random.uniform(0,30) # Spin period range is 0 to 30 ms
+        chosen_periods.append(u)
+        probs.append((1/u)*(np.exp(-(np.log(u)-1.5)**2/(2*(0.58**2))))*(1-np.exp(-1*u/10)))
+    return np.random.choice(chosen_periods, p=probs/sum(probs))
+
 def _cc97():
     """A model for MSP period distribution."""
     p = 0.0
@@ -499,7 +515,7 @@ if __name__ == '__main__':
     # period distribution parameters
     parser.add_argument('-pdist', nargs=1, required=False, default=['lnorm'],
                         help='type of distribution to use for pulse periods',
-                        choices=['lnorm', 'norm', 'cc97', 'lorimer12'])
+                        choices=['lnorm', 'norm', 'cc97', 'lorimer12','lorimer15'])
 
     parser.add_argument('-p', nargs=2, required=False, type=float,
                         default=[2.7, -0.34],
