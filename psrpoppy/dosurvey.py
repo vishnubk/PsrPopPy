@@ -87,6 +87,7 @@ def write(surveyPops,
 
 def run(pop,
         surveyList,
+        discovery_file_tag,
         nostdout=False,
         allsurveyfile=False,
         scint=False,
@@ -127,6 +128,12 @@ def run(pop,
             # is the pulsar over the detection threshold?
             snr = s.SNRcalc(psr, pop)
 
+            if snr==-1 or snr==-2:
+                snr=snr
+            else:
+                tmp=snr[0]
+                used_degfac=snr[1]
+                snr=tmp
             # add scintillation, if required
             # modifying S/N rather than flux is sensible because then
             # a pulsar can have same flux but change S/N in repeated surveys
@@ -148,7 +155,7 @@ def run(pop,
                     
                     # If its the final survey file also write out a summary of discovery parameters
                     if surv == surveyList[-1]:
-                        discovered_psrs.append(str(psr.period)+' '+str(psr.dm)+' '+str(psr.gl)+' '+str(psr.gb))     
+                        discovered_psrs.append(str(psr.period)+' '+str(psr.dm)+' '+str(psr.gl)+' '+str(psr.gb)+' '+str(snr)+' '+str(used_degfac))     
 
             elif snr == -1.0:
                 nsmear += 1
@@ -176,7 +183,7 @@ def run(pop,
 
         
     if discovered_psrs:
-        with open('soi.disc','a') as textfile:
+        with open(discovery_file_tag,'a') as textfile:
             for element in discovered_psrs:
                 textfile.write(element + "\n")
             textfile.close()
@@ -199,6 +206,9 @@ if __name__ == '__main__':
         '-f', metavar='fname', default='populate.model',
         help='file containing population model (def=populate.model')
 
+    parser.add_argument(
+        '-o', metavar='output_tag', default='soi.disc',
+        help='Output tag for discovery file (def=soi.disc)')
     parser.add_argument(
         '-surveys', metavar='S', nargs='+', required=True,
         help='surveys to use to detect pulsars (required)')
@@ -243,6 +253,7 @@ if __name__ == '__main__':
     # run the population through the surveys
     surveyPopulations = run(population,
                             args.surveys,
+                            args.o,
                             nostdout=args.nostdout,
                             allsurveyfile=args.allsurveys,
                             scint=args.scint,
