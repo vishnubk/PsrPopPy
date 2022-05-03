@@ -488,7 +488,7 @@ class Survey:
                 print "gamma harm4 = ", gamma
 
         # return the S/N accounting for beam offset
-        return sig_to_noise * degfac
+        return sig_to_noise, degfac
 
     def _AA_factor(self, pulsar):
         """ Aperture array factor """
